@@ -1,6 +1,5 @@
 import tuke_openlab
 import pygame
-import time
 from audio_analizer import AudioAnalyzer
 from tuke_openlab.lights import Color
 from bar import Bar
@@ -16,9 +15,9 @@ def get_lights():
         [i for i in range(43, 55)],
         [i for i in range(16, 28)],
 
-        [i for i in range(55, 69)],
-        [i for i in range(28, 42)],
-        [i for i in range(1, 15)],
+        list(reversed([i for i in range(55, 70)])),
+        list(reversed([i for i in range(28, 43)])),
+        list(reversed([i for i in range(1, 16)])),
     ]
 
 
@@ -71,4 +70,4 @@ def main(file: str):
 
 
 if __name__ == "__main__":
-    main('JINJER - Pisces (Live Session) Napalm Records.mp3')
+    main('AC-DC - Thunderstruck.mp3')
