@@ -1,5 +1,4 @@
 import librosa
-import soundfile as sf
 import numpy as np
 import io
 from six.moves.urllib.request import urlopen
