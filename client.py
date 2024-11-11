@@ -16,10 +16,13 @@ logger.setLevel(logging.INFO)
 
 
 class AudioVisualizerClient:
+    OPEN_LAB_AUDIO_TOPIC = "openlab/audio"
+
     def __init__(self, host: str, port: str, is_production: bool = True) -> None:
         self._host = host
         self._port = port
         self._id = "audio-visualizer"
+        self._is_production = is_production
 
         self.controller = tuke_openlab.Controller(
             tuke_openlab.production_env()
@@ -67,6 +70,9 @@ class AudioVisualizerClient:
 
     def play(self, file_url: str) -> None:
         self.analizer.load(file_url)
+
+        pygame.mixer.init()
+
         with tempfile.NamedTemporaryFile(
             suffix=f".{self.analizer.file_type}", delete=False
         ) as temp_file:
@@ -74,8 +80,17 @@ class AudioVisualizerClient:
             temp_file.write(self.analizer.file.read())
             temp_file_path = temp_file.name
 
-        pygame.mixer.init()
         pygame.mixer.music.load(temp_file_path)
+        pygame.mixer.music.set_volume(1)
+
+        if self._is_production:
+            self._client.publish(
+                self.OPEN_LAB_AUDIO_TOPIC,
+                json.dumps({"play": f"{file_url}"}),
+            )
+
+            pygame.mixer.music.set_volume(0)
+
         pygame.mixer.music.play()
 
         while True:
