@@ -26,6 +26,7 @@ class AudioVisualizerClient:
             if is_production
             else tuke_openlab.simulation_env("os228mz")
         )
+        self.controller.lights.turn_off()
         self.lights = self._get_lights()
         self.bars = self._get_bars(Color(w=255))
 
@@ -86,15 +87,16 @@ class AudioVisualizerClient:
 
         self.analizer.file.seek(0)
         pygame.mixer.music.stop()
+        self.controller.lights.turn_off()
 
     def _get_lights(self) -> list[list[int]]:
         return [
             [i for i in range(70, 82)],
             [i for i in range(43, 55)],
             [i for i in range(16, 28)],
-            [i for i in range(55, 70)],
-            [i for i in range(28, 43)],
-            [i for i in range(16, 1)],
+            list(reversed([i for i in range(55, 70)])),
+            list(reversed([i for i in range(28, 43)])),
+            list(reversed([i for i in range(1, 16)])),
         ]
 
     def _get_bars(self, color: Color) -> list[Bar]:
