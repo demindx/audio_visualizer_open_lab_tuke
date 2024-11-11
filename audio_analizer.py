@@ -12,8 +12,10 @@ class AudioAnalyzer:
         self.spectrogram = None
 
         self.file = None
+        self.file_type = None
 
     def load(self, file_url: str):
+        self.file_type = file_url.split(".")[-1]
         self.file = io.BytesIO(urlopen(file_url).read())
         self.time_series, self.sample_rate = librosa.load(self.file)
 

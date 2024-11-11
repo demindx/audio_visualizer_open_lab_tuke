@@ -66,7 +66,9 @@ class AudioVisualizerClient:
 
     def play(self, file_url: str) -> None:
         self.analizer.load(file_url)
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=f".{self.analizer.file_type}", delete=False
+        ) as temp_file:
             self.analizer.file.seek(0)
             temp_file.write(self.analizer.file.read())
             temp_file_path = temp_file.name
