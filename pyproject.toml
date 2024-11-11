@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "open-lab-audio-visualizer"
+version = "0.1.0"
+description = ""
+authors = ["SerMeliodas <oliver9574@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+soundfile = "^0.12.1"
+librosa = "^0.10.2.post1"
+tuke-openlab = {version = "^0.0.4", source = "tuke"}
+pygame = "^2.6.1"
+paho-mqtt = "^2.1.0"
+six = "^1.16.0"
+
+
+[[tool.poetry.source]]
+name = "tuke"
+url = "https://repo.kpi.fei.tuke.sk/repository/pypi/simple"
+priority = "supplemental"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
