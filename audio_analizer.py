@@ -22,6 +22,8 @@ class AudioAnalyzer:
 
         self.spectrogram = librosa.amplitude_to_db(stft, ref=np.max)
 
+        del stft
+
         frequencies = librosa.core.fft_frequencies(n_fft=2048 * 4)
 
         times = librosa.core.frames_to_time(
@@ -30,6 +32,9 @@ class AudioAnalyzer:
             hop_length=512,
             n_fft=2048 * 4,
         )
+
+        del self.sample_rate
+        del self.time_series
 
         self.time_index_ratio = len(times) / times[len(times) - 1]
 

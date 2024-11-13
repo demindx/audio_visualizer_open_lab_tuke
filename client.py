@@ -1,6 +1,7 @@
 import json
 import logging
 import tempfile
+import threading
 
 import pygame.mixer
 import tuke_openlab
@@ -9,10 +10,39 @@ from tuke_openlab.lights import Color
 
 from audio_analizer import AudioAnalyzer
 from bar import Bar
+import ctypes
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
+class AudioThread(threading.Thread):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def run(self):
+        try:
+            self._target(*self._args)
+        finally:
+            return
+
+    def get_id(self):
+        if hasattr(self, "_thread_id"):
+            return self._thread_id
+        for id, thread in threading._active.items():
+            if thread is self:
+                return id
+
+    def kill(self):
+        thread_id = self.get_id()
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+            thread_id, ctypes.py_object(SystemExit)
+        )
+
+        if res > 1:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
+            print("Exception raiise failrule")
 
 
 class AudioVisualizerClient:
@@ -32,8 +62,6 @@ class AudioVisualizerClient:
         self.controller.lights.turn_off()
         self.lights = self._get_lights()
         self.bars = self._get_bars(Color(w=255))
-
-        self.analizer = AudioAnalyzer()
 
         self._topic = "openlab/audio-visualizer"
 
@@ -57,7 +85,11 @@ class AudioVisualizerClient:
         data = json.loads(message.payload.decode())
 
         if data.get("play"):
-            self.play(data["play"])
+            if data["play"] == "stop":
+                pygame.mixer.music.stop()
+                self._thread.join()
+            self._thread = AudioThread(target=self.play, args=[data["play"]])
+            self._thread.start()
 
     def on_connect(
         self, client, userdata, connect_flags, reason_code, properties
@@ -69,15 +101,16 @@ class AudioVisualizerClient:
         logger.info("MQTT client disconnected")
 
     def play(self, file_url: str) -> None:
-        self.analizer.load(file_url)
+        analizer = AudioAnalyzer()
+        analizer.load(file_url)
 
         pygame.mixer.init()
 
         with tempfile.NamedTemporaryFile(
-            suffix=f".{self.analizer.file_type}", delete=False
+            suffix=f".{analizer.file_type}", delete=False
         ) as temp_file:
-            self.analizer.file.seek(0)
-            temp_file.write(self.analizer.file.read())
+            analizer.file.seek(0)
+            temp_file.write(analizer.file.read())
             temp_file_path = temp_file.name
 
         pygame.mixer.music.load(temp_file_path)
@@ -89,20 +122,23 @@ class AudioVisualizerClient:
                 json.dumps({"play": f"{file_url}"}),
             )
 
-            pygame.mixer.music.set_volume(0)
+            # pygame.mixer.music.set_volume(0)
+
+        analizer.file.close()
 
         pygame.mixer.music.play()
 
         while True:
             for bar in self.bars:
-                bar.update(self.analizer, pygame.mixer.music.get_pos() / 1000.0)
+                bar.update(analizer, pygame.mixer.music.get_pos() / 1000.0)
 
-            if pygame.mixer.music.get_pos() / 1000.0 <= 0:
+            if not pygame.mixer.music.get_busy():
+                self.controller.lights.turn_off()
                 break
 
-        self.analizer.file.seek(0)
+        analizer.file.seek(0)
+        del analizer
         pygame.mixer.music.stop()
-        self.controller.lights.turn_off()
 
     def _get_lights(self) -> list[list[int]]:
         return [
