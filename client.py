@@ -122,7 +122,7 @@ class AudioVisualizerClient:
                 json.dumps({"play": f"{file_url}"}),
             )
 
-            # pygame.mixer.music.set_volume(0)
+            pygame.mixer.music.set_volume(0)
 
         analizer.file.close()
 
